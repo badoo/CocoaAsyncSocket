@@ -2662,7 +2662,14 @@ enum GCDAsyncSocketConfig : uint32_t
 	LogTrace();
 	
 	[self endConnectTimeout];
-	[self closeWithError:[self connectTimeoutError]];
+	
+	NSError *error = [self connectTimeoutError];
+	[self closeWithError:error];
+	
+	if ([theDelegate respondsToSelector:@selector(socketDidNotConnect:error:)])
+	{
+		[theDelegate socketDidNotConnect:self error:error];
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2805,7 +2812,7 @@ enum GCDAsyncSocketConfig : uint32_t
 	
 	// If the client has passed the connect/accept method, then the connection has at least begun.
 	// Notify delegate that it is now ending.
-	BOOL shouldCallDelegate = (flags & kSocketStarted);
+	BOOL shouldCallDelegate = (flags & kConnected);
 	
 	// Clear stored socket info and all flags (config remains as is)
 	socketFDBytesAvailable = 0;
